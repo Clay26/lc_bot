@@ -32,8 +32,8 @@ class DailyLC(commands.Cog):
             link = question['activeDailyCodingChallengeQuestion']['link']
             difficulty = question['activeDailyCodingChallengeQuestion']['question']['difficulty']
             acRate = question['activeDailyCodingChallengeQuestion']['question']['acRate']
-            fullLink = f'https://leetcode.com/{link}'
-            message = f'Good morning grinders. Here is your question of the day: {fullLink}'
+            fullLink = f'https://leetcode.com{link}'
+            message = f'Good morning grinders. Here is your question of the day: {fullLink}\nIt has an acceptance rate of: {acRate:.2f}%'
             channelId = self.channelId
             if (channelId is not None):
                 channel = self.bot.get_channel(channelId)
