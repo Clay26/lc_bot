@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import discord
 from discord.ext import commands, tasks
 import random
@@ -6,7 +8,6 @@ import asyncio
 import time
 import logging
 import logging.handlers
-from apikeys import BOTTOKEN
 from DailyLC import DailyLC
 from LeetQuery import LeetQuery
 
@@ -55,5 +56,12 @@ formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+load_dotenv()
+DISCORD_API_KEY = os.getenv('DISCORD_BOT_API_KEY')
 
-bot.run(BOTTOKEN, log_handler=None)
+if not DISCORD_API_KEY:
+    logger.error("Unable to fetch API key.")
+else:
+    logger.info("Logging in as grinder bot.")
+    bot.run(DISCORD_API_KEY, log_handler=None)
+    logger.debug("Sucessfully logged in as the grinder bot.")
