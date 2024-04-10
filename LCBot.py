@@ -18,22 +18,24 @@ class LCBot():
         self.register_events()
         self.register_commands()
 
+        self.logger.setLevel(logging.DEBUG)
+
     def setup_logging(self):
         load_dotenv()
 
         environment = os.getenv('ENVIRONMENT', 'development')
         if environment == 'production':
-            log_file_path = '/home/LogFiles/discord.log'
+            logFilePath = '/home/LogFiles/discord.log'
+            loggingLevel = logging.ERROR
         else:
-            log_file_path = './discord.log'
+            logFilePath = './discord.log'
+            loggingLevel = logging.INFO
 
-        logging.basicConfig(filename=log_file_path, level=logging.INFO)
+        logging.basicConfig(filename=logFilePath, level=loggingLevel)
         logger = logging.getLogger('discord')
-        logger.setLevel(logging.DEBUG)
-        logging.getLogger('discord.http').setLevel(logging.INFO)
 
         handler = logging.handlers.RotatingFileHandler(
-            filename=log_file_path,
+            filename=logFilePath,
             encoding='utf-8',
             maxBytes=32 * 1024 * 1024,  # 32 MiB
             backupCount=5,  # Rotate through 5 files
@@ -42,6 +44,11 @@ class LCBot():
         formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+
+        self.logger = logging.getLogger('discord.LCBot')
+
+        self.logger.setLevel(logging.DEBUG)
+        logging.getLogger('discord.DailyLC').setLevel(logging.DEBUG)
 
     def register_events(self):
         @self.bot.event
@@ -66,8 +73,8 @@ class LCBot():
         DISCORD_API_KEY = os.getenv('DISCORD_BOT_API_KEY')
 
         if not DISCORD_API_KEY:
-            logging.error("Unable to fetch API key.")
+            self.logger.error("Unable to fetch API key.")
         else:
-            logging.info("Logging in as grinder bot.")
+            self.logger.info("Logging in as grinder bot.")
             self.bot.run(DISCORD_API_KEY, log_handler=None)
-            logging.debug("Successfully logged in as the grinder bot.")
+            self.logger.debug("Successfully logged in as the grinder bot.")
