@@ -21,7 +21,8 @@ class LCBot():
     def setup_logging(self):
         load_dotenv()
 
-        if 'WEBSITE_INSTANCE_ID' in os.environ:
+        environment = os.getenv('ENVIRONMENT', 'development')
+        if environment == 'production':
             log_file_path = '/home/LogFiles/discord.log'
         else:
             log_file_path = './discord.log'
