@@ -23,7 +23,7 @@ class DailyLC(commands.Cog):
     async def daily_question_loop(self):
         self.logger.info("Preparing to send daily question.")
         await self.send_daily_question()
-        self.logger.info(f'Successfully sent daily LC message on [today]')
+        self.logger.info(f'Successfully sent daily LC message.')
 
     async def send_daily_question(self):
         try:
@@ -40,7 +40,7 @@ class DailyLC(commands.Cog):
                 await channel.send(message)
                 self.logger.info(f'Successfully sent daily question with link [{link}].')
             else:
-                self.logger.debug("Skip sending daily question since no channel is configured")
+                self.logger.debug("Skip sending daily question since no channel is configured.")
         except Exception as e:
             # Log an error message if something goes wrong
             self.logger.error(f"Failed to send daily question: {e}", exc_info=True)
@@ -49,10 +49,10 @@ class DailyLC(commands.Cog):
         channel = self.bot.get_channel(channelId)
         if channel is not None:
             self.channelId = channelId
-            message = f'Successfully set LC bot to use channel [#{channel.name}]'
+            message = f'Successfully set LC bot to use channel [#{channel.name}].'
             await ctx.send(message)
             self.logger.info(message)
         else:
-            message = f'Could not find channel with id [{channelId}]'
+            message = f'Could not find channel with id [{channelId}].'
             await ctx.send(message)
             self.logger.debug(message)
