@@ -8,6 +8,7 @@ import logging
 import logging.handlers
 from apikeys import BOTTOKEN
 from DailyLC import DailyLC
+from LeetQuery import LeetQuery
 
 
 description = '''Sends a daily leet code challenge.'''
@@ -18,18 +19,25 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='?', description=description, intents=intents)
 
-async def send_daily_message():
-    channel = bot.get_channel(412802660719263744)
-    if channel:
-        await channel.send("Your daily message.")
-
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
-    await send_daily_message()
     await bot.add_cog(DailyLC(bot))
+    print('Added DailyLC bot')
+
+
+@bot.command()
+async def test(ctx):
+    dailyLC = bot.get_cog('DailyLC')
+    message = await dailyLC.send_daily_question()
+
+
+@bot.command()
+async def setChannel(ctx, channelId: int):
+    dailyLC = bot.get_cog('DailyLC')
+    await dailyLC.set_channel_id(ctx, channelId)
 
 
 logger = logging.getLogger('discord')
