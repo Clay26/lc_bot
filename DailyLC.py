@@ -1,5 +1,6 @@
 import datetime
 import logging
+import json
 from discord.ext import commands, tasks
 from LeetQuery import LeetQuery
 
@@ -15,6 +16,9 @@ class DailyLC(commands.Cog):
         self.channelId = None
         self.daily_question_loop.start()
         self.logger = logging.getLogger('discord.DailyLC')
+        self.channelIdCache = {}
+        self.cacheFile = 'channel_cache.json'
+        self.load_channel_cache()
 
     def cog_unload(self):
         self.daily_question_loop.cancel()
@@ -48,6 +52,10 @@ class DailyLC(commands.Cog):
     async def set_channel_id(self, ctx, channelId):
         channel = self.bot.get_channel(channelId)
         if channel is not None:
+            self.logger.debug(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
+            self.channelIdCache[str(ctx.guild.id)] = channelId
+            self.save_channel_cache()
+
             self.channelId = channelId
             message = f'Successfully set LC bot to use channel [#{channel.name}].'
             await ctx.send(message)
@@ -56,3 +64,25 @@ class DailyLC(commands.Cog):
             message = f'Could not find channel with id [{channelId}].'
             await ctx.send(message)
             self.logger.debug(message)
+
+    def load_channel_cache(self):
+        try:
+            self.logger.info("Attempting to load channel id cache.")
+            with open(self.cacheFile, 'r') as file:
+                self.channelIdCache = json.load(file)
+                self.logger.debug("Successfully loaded channel id cache.")
+        except FileNotFoundError:
+            self.channelIdCache = {}
+            self.logger.error(f"Failed to find channel id cache file.")
+        except json.JSONDecodeError:
+            self.channelIdCache = {}
+            self.logger.error(f"Failed to decode JSON channel id cache.")
+        except Exception  as e:
+            self.channelIdCache = {}
+            self.logger.error(f"Failed to load cache due to: {e}", exc_info=True)
+
+    def save_channel_cache(self):
+        self.logger.info("Attempting to save channel id cache.")
+        with open(self.cacheFile, 'w') as file:
+            json.dump(self.channelIdCache, file)
+            self.logger.info("Successfully saved channel id cache.")
