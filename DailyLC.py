@@ -6,7 +6,7 @@ from LeetQuery import LeetQuery
 utc = datetime.timezone.utc
 
 # If no tzinfo is given then UTC is assumed.
-time = datetime.time(hour=17, minute=49, tzinfo=utc)
+time = datetime.time(hour=12, minute=00, tzinfo=utc)
 
 
 class DailyLC(commands.Cog):
