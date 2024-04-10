@@ -7,6 +7,7 @@ import time
 import logging
 import logging.handlers
 from apikeys import BOTTOKEN
+from DailyLC import DailyLC
 
 
 description = '''Sends a daily leet code challenge.'''
@@ -28,6 +29,7 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
     await send_daily_message()
+    await bot.add_cog(DailyLC(bot))
 
 
 logger = logging.getLogger('discord')
@@ -44,5 +46,6 @@ dt_fmt = '%Y-%m-%d %H:%M:%S'
 formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
 
 bot.run(BOTTOKEN, log_handler=None)
