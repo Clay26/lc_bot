@@ -33,6 +33,8 @@ class LCBot():
 
         logging.basicConfig(filename=logFilePath, level=loggingLevel)
         logger = logging.getLogger('discord')
+        logger.setLevel(loggingLevel)
+        logging.getLogger('discord.http').setLevel(loggingLevel)
 
         handler = logging.handlers.RotatingFileHandler(
             filename=logFilePath,

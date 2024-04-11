@@ -2,7 +2,7 @@ import datetime
 import logging
 import json
 from discord.ext import commands, tasks
-from azure.data.tables import TableServiceClient
+from azure.data.tables import TableServiceClient, UpdateMode
 from azure.core.exceptions import ResourceExistsError
 from LeetQuery import LeetQuery
 
@@ -43,11 +43,15 @@ class DailyLC(commands.Cog):
 
             for guild in self.bot.guilds:
                 try:
-                    channelId = self.load_channel_cache(guild.id)
+                    channelId = int(self.load_channel_cache(guild.id))
                     if (channelId is not None):
+                        self.logger.info(f'Channel [{channelId}] was returned from the cache.')
                         channel = self.bot.get_channel(channelId)
-                        await channel.send(message)
-                        self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
+                        if (channel is not None):
+                            await channel.send(message)
+                            self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
+                        else:
+                            self.logger.debug(f'Failed to get channel object for server [{guild.id}].')
                     else:
                         self.logger.debug(f'Skip sending daily question since no channel is configured for server [{guild.id}].')
                 except Exception as e:
