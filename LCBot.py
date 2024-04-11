@@ -65,7 +65,13 @@ class LCBot():
         @self.bot.command()
         async def test(ctx):
             dailyLC = self.bot.get_cog('DailyLC')
-            message = await dailyLC.send_daily_question()
+            message = await dailyLC.get_daily_question_message()
+            await ctx.send(embed=message)
+
+        @self.bot.command()
+        async def fullTest(ctx):
+            dailyLC = self.bot.get_cog('DailyLC')
+            await dailyLC.send_daily_question()
 
         @self.bot.command()
         async def setChannel(ctx, channelId: int):

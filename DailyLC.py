@@ -1,6 +1,7 @@
 import datetime
 import logging
 import json
+import discord
 from discord.ext import commands, tasks
 from azure.data.tables import TableServiceClient, UpdateMode
 from azure.core.exceptions import ResourceExistsError
@@ -11,6 +12,11 @@ utc = datetime.timezone.utc
 # If no tzinfo is given then UTC is assumed.
 time = datetime.time(hour=11, minute=00, tzinfo=utc)
 
+difficultColor = {
+        'easy': discord.Color.green(),
+        'medium': discord.Color.yellow(),
+        'hard': discord.Color.red()
+        }
 
 class DailyLC(commands.Cog):
     def __init__(self, bot, connectionString):
@@ -32,14 +38,7 @@ class DailyLC(commands.Cog):
         self.logger.info(f'Successfully sent daily LC message.')
 
     async def send_daily_question(self):
-            self.logger.info("Querying LeetCode for daily question.")
-
-            question = await LeetQuery.daily_question()
-            link = question['activeDailyCodingChallengeQuestion']['link']
-            difficulty = question['activeDailyCodingChallengeQuestion']['question']['difficulty']
-            acRate = question['activeDailyCodingChallengeQuestion']['question']['acRate']
-            fullLink = f'https://leetcode.com{link}'
-            message = f'Good morning grinders. Here is your question of the day: {fullLink}\nIt has an acceptance rate of: {acRate:.2f}%'
+            message = await self.get_daily_question_message()
 
             for guild in self.bot.guilds:
                 try:
@@ -48,7 +47,7 @@ class DailyLC(commands.Cog):
                         self.logger.info(f'Channel [{channelId}] was returned from the cache.')
                         channel = self.bot.get_channel(channelId)
                         if (channel is not None):
-                            await channel.send(message)
+                            await channel.send(embed=message)
                             self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
                         else:
                             self.logger.debug(f'Failed to get channel object for server [{guild.id}].')
@@ -57,6 +56,35 @@ class DailyLC(commands.Cog):
                 except Exception as e:
                     # Log an error message if something goes wrong
                     self.logger.error(f"Failed to send daily question: {e}", exc_info=True)
+
+    async def get_daily_question_message(self):
+            self.logger.info("Querying LeetCode for daily question.")
+
+            question = await LeetQuery.daily_question()
+
+            link = question['activeDailyCodingChallengeQuestion']['link']
+            fullLink = f'https://leetcode.com{link}'
+
+            difficulty = question['activeDailyCodingChallengeQuestion']['question']['difficulty']
+            acRate = question['activeDailyCodingChallengeQuestion']['question']['acRate']
+            problem = question['activeDailyCodingChallengeQuestion']['question']['title']
+            isPaidOnly = question['activeDailyCodingChallengeQuestion']['question']['paidOnly']
+
+            title = "Daily LC"
+            date = datetime.datetime.now().strftime("%m-%d-%Y")
+            description = f'Gooooood morning grinders. Here is your question of the day for {date}!'
+            color = difficultColor[difficulty.lower()]
+            fields = []
+            embedMessage = discord.Embed(title=title, 
+                                         description=description, 
+                                         url=fullLink, 
+                                         color=color)
+            embedMessage.add_field(name="Problem", value=f'{problem}')
+            embedMessage.add_field(name="Acceptance Rate", value=f'{acRate:.2f}%')
+            embedMessage.add_field(name="Difficulty", value=f'{difficulty}')
+            embedMessage.add_field(name="Is Paid Only", value=f'{isPaidOnly}')
+
+            return embedMessage
 
     async def set_channel_id(self, ctx, channelId):
         channel = self.bot.get_channel(channelId)
