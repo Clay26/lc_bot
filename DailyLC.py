@@ -42,10 +42,10 @@ class DailyLC(commands.Cog):
 
             for guild in self.bot.guilds:
                 try:
-                    channelId = int(self.load_channel_cache(guild.id))
+                    channelId = self.load_channel_cache(guild.id)
                     if (channelId is not None):
                         self.logger.info(f'Channel [{channelId}] was returned from the cache.')
-                        channel = self.bot.get_channel(channelId)
+                        channel = self.bot.get_channel(int(channelId))
                         if (channel is not None):
                             await channel.send(embed=message)
                             self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
