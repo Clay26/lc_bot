@@ -19,6 +19,7 @@ class DailyLC(commands.Cog):
         self.logger = logging.getLogger('discord.DailyLC')
         self.table_service_client = TableServiceClient.from_connection_string(conn_str=connectionString)
         self.table_name = "ChannelCache"
+        self.table_client = None
         self.initialize_table()
 
     def cog_unload(self):
@@ -83,7 +84,7 @@ class DailyLC(commands.Cog):
             "ChannelId": str(channel_id)
         }
         try:
-            self.table_client.upsert_entity(mode="MERGE", entity=entity)
+            self.table_client.upsert_entity(mode=UpdateMode.MERGE, entity=entity)
         except Exception as e:
             self.logger.error(f"Error saving to Azure Table Storage: {e}")
 
