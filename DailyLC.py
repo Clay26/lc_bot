@@ -2,6 +2,8 @@ import datetime
 import logging
 import json
 from discord.ext import commands, tasks
+from azure.data.tables import TableServiceClient
+from azure.core.exceptions import ResourceExistsError
 from LeetQuery import LeetQuery
 
 utc = datetime.timezone.utc
@@ -11,14 +13,13 @@ time = datetime.time(hour=12, minute=00, tzinfo=utc)
 
 
 class DailyLC(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, connectionString):
         self.bot = bot
-        self.channelId = None
         self.daily_question_loop.start()
         self.logger = logging.getLogger('discord.DailyLC')
-        self.channelIdCache = {}
-        self.cacheFile = 'channel_cache.json'
-        self.load_channel_cache()
+        self.table_service_client = TableServiceClient.from_connection_string(conn_str=connectionString)
+        self.table_name = "ChannelCache"
+        self.initialize_table()
 
     def cog_unload(self):
         self.daily_question_loop.cancel()
@@ -30,31 +31,33 @@ class DailyLC(commands.Cog):
         self.logger.info(f'Successfully sent daily LC message.')
 
     async def send_daily_question(self):
-        try:
             self.logger.info("Querying LeetCode for daily question.")
+
             question = await LeetQuery.daily_question()
             link = question['activeDailyCodingChallengeQuestion']['link']
             difficulty = question['activeDailyCodingChallengeQuestion']['question']['difficulty']
             acRate = question['activeDailyCodingChallengeQuestion']['question']['acRate']
             fullLink = f'https://leetcode.com{link}'
             message = f'Good morning grinders. Here is your question of the day: {fullLink}\nIt has an acceptance rate of: {acRate:.2f}%'
-            channelId = self.channelId
-            if (channelId is not None):
-                channel = self.bot.get_channel(channelId)
-                await channel.send(message)
-                self.logger.info(f'Successfully sent daily question with link [{link}].')
-            else:
-                self.logger.debug("Skip sending daily question since no channel is configured.")
-        except Exception as e:
-            # Log an error message if something goes wrong
-            self.logger.error(f"Failed to send daily question: {e}", exc_info=True)
+
+            for guild in self.bot.guilds:
+                try:
+                    channelId = self.load_channel_cache(guild.id)
+                    if (channelId is not None):
+                        channel = self.bot.get_channel(channelId)
+                        await channel.send(message)
+                        self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
+                    else:
+                        self.logger.debug(f'Skip sending daily question since no channel is configured for server [{guild.id}].')
+                except Exception as e:
+                    # Log an error message if something goes wrong
+                    self.logger.error(f"Failed to send daily question: {e}", exc_info=True)
 
     async def set_channel_id(self, ctx, channelId):
         channel = self.bot.get_channel(channelId)
         if channel is not None:
             self.logger.debug(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
-            self.channelIdCache[str(ctx.guild.id)] = channelId
-            self.save_channel_cache()
+            self.save_channel_cache(ctx.guild.id, channelId)
 
             self.channelId = channelId
             message = f'Successfully set LC bot to use channel [#{channel.name}].'
@@ -65,24 +68,30 @@ class DailyLC(commands.Cog):
             await ctx.send(message)
             self.logger.debug(message)
 
-    def load_channel_cache(self):
+    def initialize_table(self):
         try:
-            self.logger.info("Attempting to load channel id cache.")
-            with open(self.cacheFile, 'r') as file:
-                self.channelIdCache = json.load(file)
-                self.logger.debug("Successfully loaded channel id cache.")
-        except FileNotFoundError:
-            self.channelIdCache = {}
-            self.logger.error(f"Failed to find channel id cache file.")
-        except json.JSONDecodeError:
-            self.channelIdCache = {}
-            self.logger.error(f"Failed to decode JSON channel id cache.")
-        except Exception  as e:
-            self.channelIdCache = {}
-            self.logger.error(f"Failed to load cache due to: {e}", exc_info=True)
+            self.table_client = self.table_service_client.create_table_if_not_exists(table_name=self.table_name)
+            self.logger.debug(f'Created {self.table_name} table.')
+        except ResourceExistsError:
+            self.table_client = self.table_service_client.get_table_client(table_name=self.table_name)
+            self.logger.debug(f'Connected to {self.table_name} table.')
 
-    def save_channel_cache(self):
-        self.logger.info("Attempting to save channel id cache.")
-        with open(self.cacheFile, 'w') as file:
-            json.dump(self.channelIdCache, file)
-            self.logger.info("Successfully saved channel id cache.")
+    def save_channel_cache(self, guild_id, channel_id):
+        entity = {
+            "PartitionKey": "ChannelCache",
+            "RowKey": str(guild_id),
+            "ChannelId": str(channel_id)
+        }
+        try:
+            self.table_client.upsert_entity(mode="MERGE", entity=entity)
+        except Exception as e:
+            self.logger.error(f"Error saving to Azure Table Storage: {e}")
+
+    def load_channel_cache(self, guild_id):
+        try:
+            entity = self.table_client.get_entity(partition_key="ChannelCache", row_key=str(guild_id))
+            self.logger.debug(f'Found server [{guild_id}] in cache!')
+            return entity['ChannelId']
+        except Exception:
+            self.logger.debug(f'Did not find server [{guild_id}] in cache.')
+            return None

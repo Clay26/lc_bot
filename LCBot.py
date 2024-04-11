@@ -55,7 +55,8 @@ class LCBot():
         async def on_ready():
             print(f'Logged in as {self.bot.user} (ID: {self.bot.user.id})')
             print('------')
-            await self.bot.add_cog(DailyLC(self.bot))
+            CONNECTION_STRING = os.getenv('STORAGE_CONNECTION_STRING')
+            await self.bot.add_cog(DailyLC(self.bot, CONNECTION_STRING))
             print('Added DailyLC bot')
 
     def register_commands(self):
