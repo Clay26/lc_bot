@@ -12,6 +12,9 @@ class LCBot():
         self.intents.members = True
         self.intents.message_content = True
 
+        load_dotenv()
+        self.environment = os.getenv('ENVIRONMENT', 'development')
+
         self.bot = commands.Bot(command_prefix='?', description=self.description, intents=self.intents)
 
         self.setup_logging()
@@ -21,10 +24,7 @@ class LCBot():
         self.logger.setLevel(logging.DEBUG)
 
     def setup_logging(self):
-        load_dotenv()
-
-        environment = os.getenv('ENVIRONMENT', 'development')
-        if environment == 'production':
+        if self.environment == 'production':
             logFilePath = '/home/LogFiles/discord.log'
             loggingLevel = logging.ERROR
         else:
@@ -62,6 +62,13 @@ class LCBot():
             print('Added DailyLC bot')
 
     def register_commands(self):
+        @self.bot.command()
+        async def localTest(ctx):
+            if self.environment == 'development':
+                dailyLC = self.bot.get_cog('DailyLC')
+                message = await dailyLC.get_daily_question_message()
+                await ctx.send(embed=message)
+
         @self.bot.command()
         async def test(ctx):
             dailyLC = self.bot.get_cog('DailyLC')
