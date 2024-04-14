@@ -27,9 +27,11 @@ class LCBot():
         if self.environment == 'production':
             logFilePath = '/home/LogFiles/discord.log'
             loggingLevel = logging.ERROR
+            lcLoggingLevel = logging.INFO
         else:
             logFilePath = './discord.log'
             loggingLevel = logging.INFO
+            lcLoggingLevel = logging.DEBUG
 
         logging.basicConfig(filename=logFilePath, level=loggingLevel)
         logger = logging.getLogger('discord')
@@ -49,8 +51,9 @@ class LCBot():
 
         self.logger = logging.getLogger('discord.LCBot')
 
-        self.logger.setLevel(logging.DEBUG)
-        logging.getLogger('discord.DailyLC').setLevel(logging.DEBUG)
+        self.logger.setLevel(lcLoggingLevel)
+        logging.getLogger('discord.DailyLC').setLevel(lcLoggingLevel)
+        logging.getLogger('discord.TableCache').setLevel(lcLoggingLevel)
 
     def register_events(self):
         @self.bot.event
@@ -66,7 +69,21 @@ class LCBot():
         async def localTest(ctx):
             if self.environment == 'development':
                 dailyLC = self.bot.get_cog('DailyLC')
+
+                # Testing cache loading
+                channelId = dailyLC.load_channel_cache(ctx.guild.id)
+                await ctx.send(f'Got channelId [{channelId}] from cache.')
+
+                if (channelId > 0):
+                    # Test cache saving
+                    dailyLC.save_channel_cache(ctx.guild.id, channelId)
+                    await ctx.send(f'Saved server [{ctx.guild.id}] with channelId [{channelId}] to cache.')
+                else:
+                    await ctx.send(f'Skipping server [{ctx.guild.id}] channelId cache saving since no channel is currently set.')
+
+                # Testing message retrieval
                 message = await dailyLC.get_daily_question_message()
+
                 await ctx.send(embed=message)
 
         @self.bot.command()
