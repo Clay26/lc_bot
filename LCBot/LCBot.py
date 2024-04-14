@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 import logging.handlers
-from DailyLC import DailyLC
+from LCBot import DailyLC
 
 class LCBot():
     def __init__(self):
