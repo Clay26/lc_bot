@@ -1,4 +1,4 @@
-from BaseEntity import BaseEntity
+from .BaseEntity import BaseEntity
 
 class ServerEntity(BaseEntity):
     def __init__(self, guildId, channelId=0):

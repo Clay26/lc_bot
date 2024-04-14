@@ -1,7 +1,6 @@
 import logging
 from azure.data.tables import TableServiceClient, UpdateMode
 from azure.core.exceptions import ResourceExistsError
-from BaseEntity import BaseEntity
 
 class TableCache():
     def __init__(self, entityType):
