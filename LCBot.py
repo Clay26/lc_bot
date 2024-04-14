@@ -27,9 +27,11 @@ class LCBot():
         if self.environment == 'production':
             logFilePath = '/home/LogFiles/discord.log'
             loggingLevel = logging.ERROR
+            lcLoggingLevel = logging.INFO
         else:
             logFilePath = './discord.log'
             loggingLevel = logging.INFO
+            lcLoggingLevel = logging.DEBUG
 
         logging.basicConfig(filename=logFilePath, level=loggingLevel)
         logger = logging.getLogger('discord')
@@ -49,9 +51,9 @@ class LCBot():
 
         self.logger = logging.getLogger('discord.LCBot')
 
-        self.logger.setLevel(logging.DEBUG)
-        logging.getLogger('discord.DailyLC').setLevel(logging.DEBUG)
-        logging.getLogger('discord.TableCache').setLevel(logging.DEBUG)
+        self.logger.setLevel(lcLoggingLevel)
+        logging.getLogger('discord.DailyLC').setLevel(lcLoggingLevel)
+        logging.getLogger('discord.TableCache').setLevel(lcLoggingLevel)
 
     def register_events(self):
         @self.bot.event
