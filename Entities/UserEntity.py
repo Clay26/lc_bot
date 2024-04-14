@@ -4,11 +4,12 @@ from .BaseEntity import BaseEntity
 class UserEntity(BaseEntity):
     def __init__(self, userId):
         super().__init__("UserCache", userId)
+        self.id = userId
         self.numEasy = 0
         self.numMedium = 0
         self.numHard = 0
         self.longestStreak = 0
-        self.currStreakStartDate = datetime.datetime.now()
+        self.currStreakStartDate = None
         self.completedToday = False
 
     def to_entity(self):
@@ -46,6 +47,9 @@ class UserEntity(BaseEntity):
         return str(rowKey)
 
     def get_current_streak(self):
+        if (self.currStreakStartDate is None):
+            return 0
+
         today = datetime.datetime.now()
         if self.completedToday:
             return (today.date() - self.currStreakStartDate.date()).days + 1
