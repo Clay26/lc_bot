@@ -1,8 +1,8 @@
 from BaseEntity import BaseEntity
 
 class ServerEntity(BaseEntity):
-    def __init__(self, guildId, ):
-        super().__init__("ChannelCache", guildId, channelId=0)
+    def __init__(self, guildId, channelId=0):
+        super().__init__("ChannelCache", guildId)
         self.channelId = channelId
 
     def to_entity(self):
