@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 import logging.handlers
-from LCBot import DailyLC
+from LCBot import DailyLC, StatsLC
 
 class LCBot():
     def __init__(self):
@@ -53,6 +53,7 @@ class LCBot():
 
         self.logger.setLevel(lcLoggingLevel)
         logging.getLogger('discord.DailyLC').setLevel(lcLoggingLevel)
+        logging.getLogger('discord.StatsLC').setLevel(lcLoggingLevel)
         logging.getLogger('discord.TableCache').setLevel(lcLoggingLevel)
 
     def register_events(self):
@@ -63,6 +64,15 @@ class LCBot():
             CONNECTION_STRING = os.getenv('STORAGE_CONNECTION_STRING')
             await self.bot.add_cog(DailyLC(self.bot, CONNECTION_STRING))
             print('Added DailyLC bot')
+            await self.bot.add_cog(StatsLC(self.bot, CONNECTION_STRING))
+            print('Added StatsLC bot')
+
+        @self.bot.event
+        async def on_reaction_add(reaction, user):
+            if (reaction.message.author == self.bot.user
+                and reaction.emoji == '✅'):
+                statsLC = self.bot.get_cog('StatsLC')
+                statsLC.test()
 
     def register_commands(self):
         @self.bot.command()

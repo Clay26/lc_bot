@@ -1,10 +1,7 @@
 import datetime
 import logging
-import json
 import discord
 from discord.ext import commands, tasks
-from azure.data.tables import TableServiceClient, UpdateMode
-from azure.core.exceptions import ResourceExistsError
 from Utils import LeetQuery, TableCache
 from Entities import ServerEntity
 
