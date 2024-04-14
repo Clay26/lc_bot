@@ -16,3 +16,7 @@ class BaseEntity(ABC):
     @abstractmethod
     def get_partition_key(cls, entity):
         pass
+
+    @classmethod
+    def format_row_key(cls, rowKey):
+        return rowKey

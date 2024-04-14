@@ -7,6 +7,7 @@ from azure.data.tables import TableServiceClient, UpdateMode
 from azure.core.exceptions import ResourceExistsError
 from LeetQuery import LeetQuery
 from ServerEntity import ServerEntity
+from TableCache import TableCache
 
 utc = datetime.timezone.utc
 
@@ -24,10 +25,9 @@ class DailyLC(commands.Cog):
         self.bot = bot
         self.daily_question_loop.start()
         self.logger = logging.getLogger('discord.DailyLC')
-        self.table_service_client = TableServiceClient.from_connection_string(conn_str=connectionString)
-        self.table_name = "ChannelCache"
-        self.table_client = None
-        self.initialize_table()
+
+        self.serverCache = TableCache(ServerEntity)
+        self.serverCache.initialize_table(connectionString)
 
     def cog_unload(self):
         self.daily_question_loop.cancel()
@@ -44,7 +44,7 @@ class DailyLC(commands.Cog):
             for guild in self.bot.guilds:
                 try:
                     channelId = self.load_channel_cache(guild.id)
-                    if (channelId is not None):
+                    if (channelId > 0):
                         self.logger.info(f'Channel [{channelId}] was returned from the cache.')
                         channel = self.bot.get_channel(int(channelId))
                         if (channel is not None):
@@ -90,10 +90,9 @@ class DailyLC(commands.Cog):
     async def set_channel_id(self, ctx, channelId):
         channel = self.bot.get_channel(channelId)
         if channel is not None:
-            self.logger.debug(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
+            self.logger.info(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
             self.save_channel_cache(ctx.guild.id, channelId)
 
-            self.channelId = channelId
             message = f'Successfully set LC bot to use channel [#{channel.name}].'
             await ctx.send(message)
             self.logger.info(message)
@@ -102,28 +101,10 @@ class DailyLC(commands.Cog):
             await ctx.send(message)
             self.logger.debug(message)
 
-    def initialize_table(self):
-        try:
-            self.table_client = self.table_service_client.create_table_if_not_exists(table_name=self.table_name)
-            self.logger.debug(f'Created {self.table_name} table.')
-        except ResourceExistsError:
-            self.table_client = self.table_service_client.get_table_client(table_name=self.table_name)
-            self.logger.debug(f'Connected to {self.table_name} table.')
-
     def save_channel_cache(self, guildId, channelId):
-        server = ServerEntity(guildId)
-        server.channelId = channelId
-        try:
-            self.table_client.upsert_entity(mode=UpdateMode.MERGE, entity=server.to_entity())
-        except Exception as e:
-            self.logger.error(f"Error saving to Azure Table Storage: {e}")
+        server = ServerEntity(guildId, channelId)
+        self.serverCache.save_entity(server)
 
     def load_channel_cache(self, guildId):
-        try:
-            entity = self.table_client.get_entity(partition_key=ServerEntity.get_partition_key(), row_key=str(guildId))
-            self.logger.debug(f'Found server [{guildId}] in cache!')
-            server = ServerEntity.from_entity(entity)
-            return server.channelId
-        except Exception:
-            self.logger.debug(f'Did not find server [{guildId}] in cache.')
-            return None
+        server = self.serverCache.load_entity(guildId)
+        return server.channelId

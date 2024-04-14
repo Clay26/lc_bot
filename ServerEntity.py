@@ -1,25 +1,27 @@
 from BaseEntity import BaseEntity
 
 class ServerEntity(BaseEntity):
-    partitionKey = "ChannelCache"
+    def __init__(self, guildId, ):
+        super().__init__("ChannelCache", guildId, channelId=0)
+        self.channelId = channelId
 
-    def __init__(self, guildId):
-        super().__init__(self.partitionKey, guildId)
-        self.channelId = None
-
-    def to_enttiy(self):
+    def to_entity(self):
         return {
             "PartitionKey": self.PartitionKey,
-            "RowKey": self.RowKey,
-            "ChannelId": self.channelId,
+            "RowKey": str(self.RowKey),
+            "ChannelId": str(self.channelId),
         }
 
     @classmethod
     def from_entity(cls, entity):
-        obj = cls(entity['RowKey'])
-        obj.channelId = entity.get('ChannelId', None)
+        obj = cls(int(entity.get('RowKey', "0")))
+        obj.channelId = int(entity.get('ChannelId', "0"))
         return obj
 
     @classmethod
     def get_partition_key(cls):
-        return self.partitionKey
+        return "ChannelCache"
+
+    @classmethod
+    def format_row_key(cls, rowKey):
+        return str(rowKey)
