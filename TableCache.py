@@ -12,12 +12,11 @@ class TableCache():
         self.entityType = entityType
 
         self.logger = logging.getLogger('discord.TableCache')
-        self.logger.setLevel(logging.DEBUG)
 
     def initialize_table(self, connectionString):
         try:
             self.tableServiceClient = TableServiceClient.from_connection_string(conn_str=connectionString)
-            self.tableClient = self.tableServiceClient.create_table_if_not_exists(table_name=self.tableName)
+            self.tableClient = self.tableServiceClient.create_table(table_name=self.tableName)
             self.logger.debug(f'Created [{self.tableName}] table.')
         except ResourceExistsError:
             self.tableClient = self.tableServiceClient.get_table_client(table_name=self.tableName)
