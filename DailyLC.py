@@ -6,6 +6,7 @@ from discord.ext import commands, tasks
 from azure.data.tables import TableServiceClient, UpdateMode
 from azure.core.exceptions import ResourceExistsError
 from LeetQuery import LeetQuery
+from ServerEntity import ServerEntity
 
 utc = datetime.timezone.utc
 
@@ -109,22 +110,20 @@ class DailyLC(commands.Cog):
             self.table_client = self.table_service_client.get_table_client(table_name=self.table_name)
             self.logger.debug(f'Connected to {self.table_name} table.')
 
-    def save_channel_cache(self, guild_id, channel_id):
-        entity = {
-            "PartitionKey": "ChannelCache",
-            "RowKey": str(guild_id),
-            "ChannelId": str(channel_id)
-        }
+    def save_channel_cache(self, guildId, channelId):
+        server = ServerEntity(guildId)
+        server.channelId = channelId
         try:
-            self.table_client.upsert_entity(mode=UpdateMode.MERGE, entity=entity)
+            self.table_client.upsert_entity(mode=UpdateMode.MERGE, entity=server.to_entity())
         except Exception as e:
             self.logger.error(f"Error saving to Azure Table Storage: {e}")
 
-    def load_channel_cache(self, guild_id):
+    def load_channel_cache(self, guildId):
         try:
-            entity = self.table_client.get_entity(partition_key="ChannelCache", row_key=str(guild_id))
-            self.logger.debug(f'Found server [{guild_id}] in cache!')
-            return entity['ChannelId']
+            entity = self.table_client.get_entity(partition_key=ServerEntity.get_partition_key(), row_key=str(guildId))
+            self.logger.debug(f'Found server [{guildId}] in cache!')
+            server = ServerEntity.from_entity(entity)
+            return server.channelId
         except Exception:
-            self.logger.debug(f'Did not find server [{guild_id}] in cache.')
+            self.logger.debug(f'Did not find server [{guildId}] in cache.')
             return None
