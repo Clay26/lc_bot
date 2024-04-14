@@ -5,9 +5,8 @@ import discord
 from discord.ext import commands, tasks
 from azure.data.tables import TableServiceClient, UpdateMode
 from azure.core.exceptions import ResourceExistsError
-from LeetQuery import LeetQuery
+from Utils import LeetQuery, TableCache
 from Entities import ServerEntity
-from TableCache import TableCache
 
 utc = datetime.timezone.utc
 
