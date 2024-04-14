@@ -103,4 +103,7 @@ class DailyLC(commands.Cog):
 
     def load_channel_cache(self, guildId):
         server = self.serverCache.load_entity(guildId)
+        if (server is None):
+            return 0
+
         return server.channelId

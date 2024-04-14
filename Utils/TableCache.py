@@ -1,6 +1,6 @@
 import logging
 from azure.data.tables import TableServiceClient, UpdateMode
-from azure.core.exceptions import ResourceExistsError
+from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 
 class TableCache():
     def __init__(self, entityType):
@@ -38,6 +38,10 @@ class TableCache():
             data = self.tableClient.get_entity(partition_key=self.tableName, row_key=self.entityType.format_row_key(rowKey))
             self.logger.info(f'Found row [{rowKey}] in [{self.tableName}] cache!')
             return self.entityType.from_entity(data)
+        except ResourceNotFoundError:
+            self.logger.debug(f'Row [{rowKey}] does not exit in [{self.tableName}].')
+            return None
         except Exception as e:
             # Log an error message if something goes wrong
             self.logger.error(f"Failed to pull [{self.tableName}] for row [{rowKey}]: {e}", exc_info=True)
+            return None
