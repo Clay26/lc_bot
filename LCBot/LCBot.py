@@ -70,9 +70,12 @@ class LCBot():
         @self.bot.event
         async def on_reaction_add(reaction, user):
             if (reaction.message.author == self.bot.user
-                and reaction.emoji == '✅'):
+                and reaction.emoji == '✅'
+                and len(reaction.message.embeds) == 1
+                and reaction.message.embeds[0].title == "Daily LC"):
+
                 statsLC = self.bot.get_cog('StatsLC')
-                statsLC.test()
+                statsLC.log_user_completion(reaction.message, user)
 
     def register_commands(self):
         @self.bot.command()

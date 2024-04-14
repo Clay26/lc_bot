@@ -27,8 +27,8 @@ class StatsLC(commands.Cog):
         self.logger.debug("Preparing to update users' stats.")
         self.logger.info("Successfully updated users' stats")
 
-    def test(self):
-        print("Hello, World")
+    def log_user_completion(self, message, user):
+        print("YES")
 
     def save_user_cache(self, user):
         self.userCache.save_entity(user)
