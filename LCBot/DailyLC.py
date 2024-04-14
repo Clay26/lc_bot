@@ -33,7 +33,7 @@ class DailyLC(commands.Cog):
 
     @tasks.loop(time=time)
     async def daily_question_loop(self):
-        self.logger.info("Preparing to send daily question.")
+        self.logger.debug("Preparing to send daily question.")
         await self.send_daily_question()
         self.logger.info(f'Successfully sent daily LC message.')
 
@@ -50,15 +50,15 @@ class DailyLC(commands.Cog):
                             await channel.send(embed=message)
                             self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
                         else:
-                            self.logger.debug(f'Failed to get channel object for server [{guild.id}].')
+                            self.logger.info(f'Failed to get channel object for server [{guild.id}].')
                     else:
-                        self.logger.debug(f'Skip sending daily question since no channel is configured for server [{guild.id}].')
+                        self.logger.info(f'Skip sending daily question since no channel is configured for server [{guild.id}].')
                 except Exception as e:
                     # Log an error message if something goes wrong
                     self.logger.error(f"Failed to send daily question: {e}", exc_info=True)
 
     async def get_daily_question_message(self):
-            self.logger.info("Querying LeetCode for daily question.")
+            self.logger.debug("Querying LeetCode for daily question.")
 
             question = await LeetQuery.daily_question()
 
@@ -89,7 +89,7 @@ class DailyLC(commands.Cog):
     async def set_channel_id(self, ctx, channelId):
         channel = self.bot.get_channel(channelId)
         if channel is not None:
-            self.logger.info(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
+            self.logger.debug(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
             self.save_channel_cache(ctx.guild.id, channelId)
 
             message = f'Successfully set LC bot to use channel [#{channel.name}].'
@@ -98,7 +98,7 @@ class DailyLC(commands.Cog):
         else:
             message = f'Could not find channel with id [{channelId}].'
             await ctx.send(message)
-            self.logger.debug(message)
+            self.logger.info(message)
 
     def save_channel_cache(self, guildId, channelId):
         server = ServerEntity(guildId, channelId)

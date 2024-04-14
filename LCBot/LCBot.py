@@ -108,6 +108,6 @@ class LCBot():
         if not DISCORD_API_KEY:
             self.logger.error("Unable to fetch API key.")
         else:
-            self.logger.info("Logging in as grinder bot.")
+            self.logger.debug("Logging in as grinder bot.")
             self.bot.run(DISCORD_API_KEY, log_handler=None)
-            self.logger.debug("Successfully logged in as the grinder bot.")
+            self.logger.info("Successfully logged in as the grinder bot.")
