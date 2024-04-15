@@ -86,14 +86,19 @@ class LCBot():
             print('Added StatsLC bot')
 
         @self.bot.event
-        async def on_reaction_add(reaction, user):
-            if (reaction.message.author == self.bot.user
-                and reaction.emoji == '✅'
-                and len(reaction.message.embeds) == 1
-                and reaction.message.embeds[0].title == "Daily LC"):
+        async def on_raw_reaction_add(payload):
+            channel = self.bot.get_channel(payload.channel_id)
+            message = await channel.fetch_message(payload.message_id)
 
+            if (message.author == self.bot.user
+                and payload.emoji.name == '✅'
+                and len(message.embeds) == 1
+                and message.embeds[0].title == "Daily LC"):
+
+                self.logger.debug(f'Caught completiong reaction to DailyLC message by user [{payload.user_id}].')
                 statsLC = self.bot.get_cog('StatsLC')
-                statsLC.log_user_completion(reaction.message, user)
+                statsLC.log_user_completion(message, payload.user_id)
+                self.logger.info(f'Logged DailyLC completion for user [{payload.user_id}].')
 
     def register_commands(self):
         @self.bot.command()
