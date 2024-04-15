@@ -63,6 +63,9 @@ class StatsLC(commands.Cog):
     def log_user_completion(self, message, user):
         self.logger.debug(f'Logging stats for user [{user.id}].')
         userEntity = self.load_user_cache(user.id)
+        if (userEntity.completedToday):
+            # User already completed today's question
+            return
         dailyLCQuestion = message.embeds[0]
 
         self.increment_queston_difficulty(userEntity, dailyLCQuestion)
