@@ -69,7 +69,7 @@ class DailyLC(commands.Cog):
 
             title = "Daily LC"
             date = datetime.datetime.now().strftime("%m-%d-%Y")
-            description = f'Gooooood morning grinders. Here is your question of the day for {date}!'
+            description = f'Gooooood morning grinders. Here is your question of the day for {date}! Once you solve, react to this message with the ✅ to add to your stats.'
             color = difficultColor[difficulty.lower()]
             fields = []
             embedMessage = discord.Embed(title=title, 
