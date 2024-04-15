@@ -26,6 +26,7 @@ class LCBot():
         self.intents = discord.Intents.default()
         self.intents.members = True
         self.intents.message_content = True
+        self.intents.reactions = True
 
         load_dotenv()
         self.environment = os.getenv('ENVIRONMENT', 'development')
