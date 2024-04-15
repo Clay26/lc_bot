@@ -1,5 +1,6 @@
 import datetime
 import logging
+import discord
 from discord.ext import commands, tasks
 from Utils import TableCache
 from Entities import UserEntity
@@ -90,6 +91,29 @@ class StatsLC(commands.Cog):
             if (userEntity.currStreakStartDate is None):
                 self.logger.info(f'Starting streak for user [{userEntity.id}].')
                 userEntity.currStreakStartDate = latestRelease.date()
+
+    def get_user_stats(self, user):
+        self.logger.debug(f'Getting user [{user.id}] stats.')
+        userEntity = self.load_user_cache(user.id)
+        return self.format_user_stats_embed(user.name, userEntity)
+
+    def format_user_stats_embed(self, userName, userEntity):
+        title = f'{userName}\'s Daily LC stats'
+        date = datetime.datetime.now().strftime("%m-%d-%Y")
+        description = f'Here are your stats as of {date}.'
+        fields = []
+        embedMessage = discord.Embed(title=title, 
+                                     description=description, 
+                                     color=discord.Color.blue())
+
+        embedMessage.add_field(name="Easy Solved", value=f'{userEntity.numEasy}')
+        embedMessage.add_field(name="Medium Solved", value=f'{userEntity.numMedium}')
+        embedMessage.add_field(name="Hard Solved", value=f'{userEntity.numHard}')
+        embedMessage.add_field(name="Current Streak", value=f'{userEntity.get_current_streak()}')
+        embedMessage.add_field(name="Longest Streak", value=f'{userEntity.longestStreak}')
+        embedMessage.add_field(name="Completed Today's", value=f'{userEntity.completedToday}')
+
+        return embedMessage
 
     def save_user_cache(self, user):
         self.logger.debug(f'Saving user [{user.id}] to userCache.')

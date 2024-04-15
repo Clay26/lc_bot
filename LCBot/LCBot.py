@@ -35,6 +35,7 @@ class LCBot():
         self.setup_logging()
         self.register_events()
         self.register_commands()
+        self.register_slash_commands()
 
         self.logger.setLevel(logging.DEBUG)
 
@@ -74,6 +75,7 @@ class LCBot():
     def register_events(self):
         @self.bot.event
         async def on_ready():
+            await self.bot.tree.sync(guild=discord.Object(id=1227983982692532367))
             print(f'Logged in as {self.bot.user} (ID: {self.bot.user.id})')
             print('------')
             CONNECTION_STRING = os.getenv('STORAGE_CONNECTION_STRING')
@@ -139,6 +141,18 @@ class LCBot():
         async def setChannel(ctx, channelId: int):
             dailyLC = self.bot.get_cog('DailyLC')
             await dailyLC.set_channel_id(ctx, channelId)
+
+    def register_slash_commands(self):
+        @self.bot.tree.command(
+            name="stats",
+            description="List out your personal stats.",
+            guild=discord.Object(id=1227983982692532367)
+        )
+        async def get_user_stats(interaction):
+            statsLC = self.bot.get_cog('StatsLC')
+            statsEmbed = statsLC.get_user_stats(interaction.user)
+            await interaction.response.send_message(embed=statsEmbed)
+
 
     def run(self):
         DISCORD_API_KEY = os.getenv('DISCORD_BOT_API_KEY')
