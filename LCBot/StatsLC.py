@@ -60,9 +60,9 @@ class StatsLC(commands.Cog):
 
         self.logger.info("Successfully updated users' stats")
 
-    def log_user_completion(self, message, user):
-        self.logger.debug(f'Logging stats for user [{user.id}].')
-        userEntity = self.load_user_cache(user.id)
+    def log_user_completion(self, message, userId):
+        self.logger.debug(f'Logging stats for user [{userId}].')
+        userEntity = self.load_user_cache(userId)
         if (userEntity.completedToday):
             # User already completed today's question
             return
