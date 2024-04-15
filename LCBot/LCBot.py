@@ -3,7 +3,22 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 import logging.handlers
-from LCBot import DailyLC
+from LCBot import DailyLC, StatsLC
+
+
+def user_entity_info(userEntity):
+    return (
+        f"Loaded user [{userEntity.id}] from cache.\n"
+        f"User [{userEntity.id}] stats:\n"
+        f"NumEasy: {userEntity.numEasy}\n"
+        f"NumMedium: {userEntity.numMedium}\n"
+        f"NumHard: {userEntity.numHard}\n"
+        f"Longest Streak: {userEntity.longestStreak}\n"
+        f"Current Streak Start: {userEntity.currStreakStartDate}\n"
+        f"Completed Today? {userEntity.completedToday}\n"
+        f"Current Streak: {userEntity.get_current_streak()}"
+    )
+
 
 class LCBot():
     def __init__(self):
@@ -20,6 +35,7 @@ class LCBot():
         self.setup_logging()
         self.register_events()
         self.register_commands()
+        self.register_slash_commands()
 
         self.logger.setLevel(logging.DEBUG)
 
@@ -53,16 +69,30 @@ class LCBot():
 
         self.logger.setLevel(lcLoggingLevel)
         logging.getLogger('discord.DailyLC').setLevel(lcLoggingLevel)
+        logging.getLogger('discord.StatsLC').setLevel(lcLoggingLevel)
         logging.getLogger('discord.TableCache').setLevel(lcLoggingLevel)
 
     def register_events(self):
         @self.bot.event
         async def on_ready():
+            await self.bot.tree.sync()
             print(f'Logged in as {self.bot.user} (ID: {self.bot.user.id})')
             print('------')
             CONNECTION_STRING = os.getenv('STORAGE_CONNECTION_STRING')
             await self.bot.add_cog(DailyLC(self.bot, CONNECTION_STRING))
             print('Added DailyLC bot')
+            await self.bot.add_cog(StatsLC(self.bot, CONNECTION_STRING))
+            print('Added StatsLC bot')
+
+        @self.bot.event
+        async def on_reaction_add(reaction, user):
+            if (reaction.message.author == self.bot.user
+                and reaction.emoji == '✅'
+                and len(reaction.message.embeds) == 1
+                and reaction.message.embeds[0].title == "Daily LC"):
+
+                statsLC = self.bot.get_cog('StatsLC')
+                statsLC.log_user_completion(reaction.message, user)
 
     def register_commands(self):
         @self.bot.command()
@@ -84,7 +114,17 @@ class LCBot():
                 # Testing message retrieval
                 message = await dailyLC.get_daily_question_message()
 
-                await ctx.send(embed=message)
+                messageObject = await ctx.send(embed=message)
+
+                statsLC = self.bot.get_cog('StatsLC')
+                load_dotenv()
+                testUser = await self.bot.fetch_user(os.getenv('TEST_USER'))
+                testUserEntity = statsLC.load_user_cache(testUser.id)
+                await ctx.send(user_entity_info(testUserEntity))
+
+                statsLC.log_user_completion(messageObject, testUser)
+                testUserEntity = statsLC.load_user_cache(testUserEntity.id)
+                await ctx.send(user_entity_info(testUserEntity))
 
         @self.bot.command()
         async def test(ctx):
@@ -102,12 +142,23 @@ class LCBot():
             dailyLC = self.bot.get_cog('DailyLC')
             await dailyLC.set_channel_id(ctx, channelId)
 
+    def register_slash_commands(self):
+        @self.bot.tree.command(
+            name="stats",
+            description="List out your personal stats."
+        )
+        async def get_user_stats(interaction):
+            statsLC = self.bot.get_cog('StatsLC')
+            statsEmbed = statsLC.get_user_stats(interaction.user)
+            await interaction.response.send_message(embed=statsEmbed)
+
+
     def run(self):
         DISCORD_API_KEY = os.getenv('DISCORD_BOT_API_KEY')
 
         if not DISCORD_API_KEY:
             self.logger.error("Unable to fetch API key.")
         else:
-            self.logger.info("Logging in as grinder bot.")
+            self.logger.debug("Logging in as grinder bot.")
             self.bot.run(DISCORD_API_KEY, log_handler=None)
-            self.logger.debug("Successfully logged in as the grinder bot.")
+            self.logger.info("Successfully logged in as the grinder bot.")

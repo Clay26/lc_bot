@@ -1,10 +1,7 @@
 import datetime
 import logging
-import json
 import discord
 from discord.ext import commands, tasks
-from azure.data.tables import TableServiceClient, UpdateMode
-from azure.core.exceptions import ResourceExistsError
 from Utils import LeetQuery, TableCache
 from Entities import ServerEntity
 
@@ -33,7 +30,7 @@ class DailyLC(commands.Cog):
 
     @tasks.loop(time=time)
     async def daily_question_loop(self):
-        self.logger.info("Preparing to send daily question.")
+        self.logger.debug("Preparing to send daily question.")
         await self.send_daily_question()
         self.logger.info(f'Successfully sent daily LC message.')
 
@@ -50,15 +47,15 @@ class DailyLC(commands.Cog):
                             await channel.send(embed=message)
                             self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
                         else:
-                            self.logger.debug(f'Failed to get channel object for server [{guild.id}].')
+                            self.logger.info(f'Failed to get channel object for server [{guild.id}].')
                     else:
-                        self.logger.debug(f'Skip sending daily question since no channel is configured for server [{guild.id}].')
+                        self.logger.info(f'Skip sending daily question since no channel is configured for server [{guild.id}].')
                 except Exception as e:
                     # Log an error message if something goes wrong
                     self.logger.error(f"Failed to send daily question: {e}", exc_info=True)
 
     async def get_daily_question_message(self):
-            self.logger.info("Querying LeetCode for daily question.")
+            self.logger.debug("Querying LeetCode for daily question.")
 
             question = await LeetQuery.daily_question()
 
@@ -72,7 +69,7 @@ class DailyLC(commands.Cog):
 
             title = "Daily LC"
             date = datetime.datetime.now().strftime("%m-%d-%Y")
-            description = f'Gooooood morning grinders. Here is your question of the day for {date}!'
+            description = f'Gooooood morning grinders. Here is your question of the day for {date}! Once you solve, react to this message with the ✅ to add to your stats.'
             color = difficultColor[difficulty.lower()]
             fields = []
             embedMessage = discord.Embed(title=title, 
@@ -89,7 +86,7 @@ class DailyLC(commands.Cog):
     async def set_channel_id(self, ctx, channelId):
         channel = self.bot.get_channel(channelId)
         if channel is not None:
-            self.logger.info(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
+            self.logger.debug(f'Saving server [{str(ctx.guild.id)}] to use channel id [{channelId}].')
             self.save_channel_cache(ctx.guild.id, channelId)
 
             message = f'Successfully set LC bot to use channel [#{channel.name}].'
@@ -98,7 +95,7 @@ class DailyLC(commands.Cog):
         else:
             message = f'Could not find channel with id [{channelId}].'
             await ctx.send(message)
-            self.logger.debug(message)
+            self.logger.info(message)
 
     def save_channel_cache(self, guildId, channelId):
         server = ServerEntity(guildId, channelId)
@@ -106,4 +103,7 @@ class DailyLC(commands.Cog):
 
     def load_channel_cache(self, guildId):
         server = self.serverCache.load_entity(guildId)
+        if (server is None):
+            return 0
+
         return server.channelId
