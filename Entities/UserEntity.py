@@ -56,5 +56,16 @@ class UserEntity(BaseEntity):
         if (self.currStreakStartDate is None):
             return 0
 
-        today = datetime.datetime.now()
-        return (today.date() - self.currStreakStartDate.date()).days + 1
+        utc = datetime.timezone.utc
+        now = datetime.datetime.now(utc)
+        time = datetime.time(hour=11, minute=00, tzinfo=utc)
+
+        nextRelease = datetime.datetime.combine(now.date(), time)
+
+        if now > nextRelease:
+            # Before 11 AM UTC, use yesterday as latest release
+            nextRelease = nextRelease + datetime.timedelta(days=1)
+
+        latestRelease = nextRelease - datetime.timedelta(days=1)
+
+        return (latestRelease.date() - self.currStreakStartDate.date()).days + 1
