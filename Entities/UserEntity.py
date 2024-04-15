@@ -68,4 +68,6 @@ class UserEntity(BaseEntity):
 
         latestRelease = nextRelease - datetime.timedelta(days=1)
 
-        return (latestRelease.date() - self.currStreakStartDate.date()).days + 1
+        todayBonus = (0 if self.completedToday else -1)
+
+        return (latestRelease.date() - self.currStreakStartDate.date()).days + 1 + todayBonus
