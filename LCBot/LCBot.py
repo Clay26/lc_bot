@@ -75,7 +75,7 @@ class LCBot():
     def register_events(self):
         @self.bot.event
         async def on_ready():
-            await self.bot.tree.sync(guild=discord.Object(id=1227983982692532367))
+            await self.bot.tree.sync()
             print(f'Logged in as {self.bot.user} (ID: {self.bot.user.id})')
             print('------')
             CONNECTION_STRING = os.getenv('STORAGE_CONNECTION_STRING')
@@ -145,8 +145,7 @@ class LCBot():
     def register_slash_commands(self):
         @self.bot.tree.command(
             name="stats",
-            description="List out your personal stats.",
-            guild=discord.Object(id=1227983982692532367)
+            description="List out your personal stats."
         )
         async def get_user_stats(interaction):
             statsLC = self.bot.get_cog('StatsLC')
