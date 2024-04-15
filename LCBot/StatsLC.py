@@ -31,6 +31,26 @@ class StatsLC(commands.Cog):
     @tasks.loop(time=time)
     async def daily_stats_update(self):
         self.logger.debug("Preparing to update users' stats.")
+        for user in self.bot.get_members():
+            userEntity = self.load_user_cache(user.id)
+
+            currStreak = userEntity.get_current_streak()
+
+            if userEntity.completedToday:
+                # Check if today's completion results in a new longest streak
+                if currStreak > userEntity.longestStreak:
+                    self.logger.info(f'User [{userEntity.id}] has a new longest streak!')
+                    userEntity.longestStreak = currStreak
+            else:
+                # Reset current streak if they haven't completed today
+                userEntity.currStreakStartDate = None
+
+            # Reset the daily completion flag for all users
+            userEntity.completedToday = False
+
+            # Save changes to the cache
+            self.save_user_cache(userEntity)
+
         self.logger.info("Successfully updated users' stats")
 
     def log_user_completion(self, message, user):
