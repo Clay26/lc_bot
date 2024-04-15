@@ -95,6 +95,7 @@ class StatsLC(commands.Cog):
     def get_user_stats(self, user):
         self.logger.debug(f'Getting user [{user.id}] stats.')
         userEntity = self.load_user_cache(user.id)
+        self.logger.info(f'Successfully generated user [{user.id}] stats.')
         return self.format_user_stats_embed(user.name, userEntity)
 
     def format_user_stats_embed(self, userName, userEntity):
