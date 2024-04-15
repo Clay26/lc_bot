@@ -32,7 +32,13 @@ class StatsLC(commands.Cog):
     @tasks.loop(time=time)
     async def daily_stats_update(self):
         self.logger.debug("Preparing to update users' stats.")
-        for user in self.bot.get_members():
+        seenUserIds = set()
+
+        for user in self.bot.get_all_members():
+            if user.id in seenUserIds:
+                continue
+            seenUserIds.add(user.id)
+
             userEntity = self.load_user_cache(user.id)
 
             currStreak = userEntity.get_current_streak()
