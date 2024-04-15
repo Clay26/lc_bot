@@ -13,6 +13,8 @@ class UserEntity(BaseEntity):
         self.completedToday = False
 
     def to_entity(self):
+        currStreakStartDataStr = (self.currStreakStartDate.isoformat() if self.currStreakStartDate else "None")
+
         return {
             "PartitionKey": self.PartitionKey,
             "RowKey": str(self.RowKey),
@@ -20,22 +22,26 @@ class UserEntity(BaseEntity):
             "numMedium": self.numMedium,
             "numHard": self.numHard,
             "longestStreak": self.longestStreak,
-            "currStreakStartDate": self.currStreakStartDate.isoformat(),  # ISO format for datetime
+            "currStreakStartDate": currStreakStartDataStr,  # ISO format for datetime
             "completedToday": self.completedToday
         }
 
     @classmethod
     def from_entity(cls, entity):
-        # Convert RowKey back to integer if it was originally an integer, here assumed as a string
         user_id = entity['RowKey']
         obj = cls(user_id)
         obj.numEasy = int(entity.get('numEasy', 0))
         obj.numMedium = int(entity.get('numMedium', 0))
         obj.numHard = int(entity.get('numHard', 0))
         obj.longestStreak = int(entity.get('longestStreak', 0))
-        # Parse the ISO format datetime back into a datetime object
-        obj.currStreakStartDate = datetime.datetime.fromisoformat(entity.get('currStreakStartDate'))
-        obj.completedToday = entity.get('completedToday', False) == 'True'
+        obj.completedToday = entity.get('completedToday', False)
+
+        currStreakStartDateData = entity['currStreakStartDate']
+        if currStreakStartDateData == "None":
+            currStreakStartDate = None
+        else:
+            currStreakStartDate = datetime.datetime.fromisoformat(currStreakStartDateData)
+        obj.currStreakStartDate = currStreakStartDate
         return obj
 
     @classmethod
@@ -51,7 +57,4 @@ class UserEntity(BaseEntity):
             return 0
 
         today = datetime.datetime.now()
-        if self.completedToday:
-            return (today.date() - self.currStreakStartDate.date()).days + 1
-        else:
-            return (today.date() - self.currStreakStartDate.date()).days
+        return (today.date() - self.currStreakStartDate.date()).days + 1

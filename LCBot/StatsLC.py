@@ -9,6 +9,7 @@ utc = datetime.timezone.utc
 # If no tzinfo is given then UTC is assumed.
 time = datetime.time(hour=11, minute=00, tzinfo=utc)
 
+
 def parse_embed_fields(dailyLCFields, fieldName):
     for field in dailyLCFields:
         if (field.name.lower() == fieldName.lower()):
@@ -33,11 +34,13 @@ class StatsLC(commands.Cog):
         self.logger.info("Successfully updated users' stats")
 
     def log_user_completion(self, message, user):
+        self.logger.debug(f'Logging stats for user [{user.id}].')
         userEntity = self.load_user_cache(user.id)
         dailyLCQuestion = message.embeds[0]
 
         self.increment_queston_difficulty(userEntity, dailyLCQuestion)
         self.check_streak(userEntity, message)
+        self.save_user_cache(userEntity)
 
     def increment_queston_difficulty(self, userEntity, dailyLCQuestion):
         difficulty = parse_embed_fields(dailyLCQuestion.fields, 'difficulty')
@@ -51,23 +54,32 @@ class StatsLC(commands.Cog):
     def check_streak(self, userEntity, dailyLCMessage):
         now = datetime.datetime.now(utc)
 
-        todayNewLCTime = datetime.datetime.combine(now.date(), time)
-        yesterdayLCTime = todayNewLCTime - datetime.timedelta(days=1)
-        tomorrowLCTime = todayNewLCTime + datetime.timedelta(days=1)
+        nextRelease = datetime.datetime.combine(now.date(), time)
 
-        dailyLCDate = dailyLCMessage.created_at
+        if now > nextRelease:
+            # Before 11 AM UTC, use yesterday as latest release
+            nextRelease = nextRelease + datetime.timedelta(days=1)
 
-        if dailyLCDate >= todayNewLCTime and dailyLCDate < tomorrowLCTime:
+        latestRelease = nextRelease - datetime.timedelta(days=1)
+
+        completedDailyLCDate = dailyLCMessage.created_at
+
+        if latestRelease <= completedDailyLCDate and completedDailyLCDate < nextRelease:
+            self.logger.info(f'User [{userEntity.id}] completed the Daily LC!')
             userEntity.completedToday = True
             if (userEntity.currStreakStartDate is None):
-                userEntity.currStreakStartDate = now
+                self.logger.info(f'Starting streak for user [{userEntity.id}].')
+                userEntity.currStreakStartDate = latestRelease.date()
 
     def save_user_cache(self, user):
+        self.logger.debug(f'Saving user [{user.id}] to userCache.')
         self.userCache.save_entity(user)
+        self.logger.info(f'Saved user [{user.id}] to userCache.')
 
     def load_user_cache(self, userId):
         user = self.userCache.load_entity(userId)
         if (user is None):
+            self.logger.info(f'Creating user entity for user [{userId}].')
             user = UserEntity(userId)
 
         return user

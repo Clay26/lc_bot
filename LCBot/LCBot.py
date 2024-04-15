@@ -5,6 +5,21 @@ from discord.ext import commands
 import logging.handlers
 from LCBot import DailyLC, StatsLC
 
+
+def user_entity_info(userEntity):
+    return (
+        f"Loaded user [{userEntity.id}] from cache.\n"
+        f"User [{userEntity.id}] stats:\n"
+        f"NumEasy: {userEntity.numEasy}\n"
+        f"NumMedium: {userEntity.numMedium}\n"
+        f"NumHard: {userEntity.numHard}\n"
+        f"Longest Streak: {userEntity.longestStreak}\n"
+        f"Current Streak Start: {userEntity.currStreakStartDate}\n"
+        f"Completed Today? {userEntity.completedToday}\n"
+        f"Current Streak: {userEntity.get_current_streak()}"
+    )
+
+
 class LCBot():
     def __init__(self):
         self.description = '''Sends a daily leet code challenge.'''
@@ -97,7 +112,17 @@ class LCBot():
                 # Testing message retrieval
                 message = await dailyLC.get_daily_question_message()
 
-                await ctx.send(embed=message)
+                messageObject = await ctx.send(embed=message)
+
+                statsLC = self.bot.get_cog('StatsLC')
+                load_dotenv()
+                testUser = await self.bot.fetch_user(os.getenv('TEST_USER'))
+                testUserEntity = statsLC.load_user_cache(testUser.id)
+                await ctx.send(user_entity_info(testUserEntity))
+
+                statsLC.log_user_completion(messageObject, testUser)
+                testUserEntity = statsLC.load_user_cache(testUserEntity.id)
+                await ctx.send(user_entity_info(testUserEntity))
 
         @self.bot.command()
         async def test(ctx):
