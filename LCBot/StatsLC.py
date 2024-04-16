@@ -8,7 +8,7 @@ from Entities import UserEntity
 utc = datetime.timezone.utc
 
 # If no tzinfo is given then UTC is assumed.
-time = datetime.time(hour=11, minute=00, tzinfo=utc)
+time = datetime.time(hour=10, minute=58, tzinfo=utc)
 
 
 def parse_embed_fields(dailyLCFields, fieldName):
