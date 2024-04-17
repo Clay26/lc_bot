@@ -134,7 +134,7 @@ class LCBot:
                 testUserEntity = statsLC.load_user_cache(testUser.id)
                 await ctx.send(user_entity_info(testUserEntity))
 
-                statsLC.log_user_completion(messageObject, testUser)
+                statsLC.log_user_completion(messageObject, testUser.id)
                 testUserEntity = statsLC.load_user_cache(testUserEntity.id)
                 await ctx.send(user_entity_info(testUserEntity))
 
