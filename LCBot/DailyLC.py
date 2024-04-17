@@ -5,11 +5,6 @@ from discord.ext import commands, tasks
 from Utils import LeetQuery, TableCache
 from Entities import ServerEntity
 
-utc = datetime.timezone.utc
-
-# If no tzinfo is given then UTC is assumed.
-time = datetime.time(hour=11, minute=00, tzinfo=utc)
-
 difficultColor = {
         'easy': discord.Color.green(),
         'medium': discord.Color.yellow(),
@@ -33,7 +28,7 @@ class DailyLC(commands.Cog):
     def cog_unload(self):
         self.daily_question_loop.cancel()
 
-    @tasks.loop(time=time)
+    @tasks.loop(time=datetime.time(hour=11, minute=00, tzinfo=datetime.timezone.utc))
     async def daily_question_loop(self):
         self.logger.debug("Preparing to send daily question.")
         await self.send_daily_question()
