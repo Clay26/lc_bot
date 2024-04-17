@@ -11,7 +11,7 @@ class UserEntity(BaseEntity):
     numMedium: int
     numHard: int
     longestStreak: int
-    currStreakStartDate: Optional[datetime.datetime] = None
+    currStreakStartDate: Optional[datetime.date] = None
     completedToday: bool
 
     def __init__(self, userId: str):
@@ -52,8 +52,15 @@ class UserEntity(BaseEntity):
         if currStreakStartDateData == "None":
             currStreakStartDate = None
         else:
-            currStreakStartDate = datetime.datetime.fromisoformat(currStreakStartDateData)
-        obj.currStreakStartDate = currStreakStartDate
+            try:
+                currStreakStartDate = datetime.date.fromisoformat(currStreakStartDateData)
+            except ValueError:
+                try:
+                    currStreakStartDate = datetime.datetime.fromisoformat(currStreakStartDateData).date()
+                except ValueError:
+                    currStreakStartDate = datetime.datetime.now().date()
+            finally:
+                obj.currStreakStartDate = currStreakStartDate
         return obj
 
     @classmethod
@@ -78,4 +85,4 @@ class UserEntity(BaseEntity):
 
         todayBonus = (0 if self.completedToday else -1)
 
-        return (latestRelease.date() - self.currStreakStartDate.date()).days + 1 + todayBonus
+        return (latestRelease.date() - self.currStreakStartDate).days + 1 + todayBonus
