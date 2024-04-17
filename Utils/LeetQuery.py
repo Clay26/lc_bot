@@ -3,7 +3,11 @@ from gql.transport.aiohttp import AIOHTTPTransport
 from typing import Optional, Dict, Any
 import logging
 
+
 class LeetQuery:
+    logger: logging.Logger
+    client: Client
+
     def __init__(self, url: str = "https://leetcode.com/graphql"):
         transport = AIOHTTPTransport(url=url)
         self.client = Client(transport=transport, fetch_schema_from_transport=False)
