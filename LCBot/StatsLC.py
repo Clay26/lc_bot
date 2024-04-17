@@ -5,20 +5,19 @@ from discord.ext import commands, tasks
 from Utils import TableCache
 from Entities import UserEntity
 
-utc = datetime.timezone.utc
 
-# If no tzinfo is given then UTC is assumed.
-time = datetime.time(hour=10, minute=58, tzinfo=utc)
-
-
-def parse_embed_fields(dailyLCFields, fieldName):
+def parse_embed_fields(dailyLCFields: dict, fieldName: str) -> str:
     for field in dailyLCFields:
         if (field.name.lower() == fieldName.lower()):
             return field.value
 
 
 class StatsLC(commands.Cog):
-    def __init__(self, bot, connectionString):
+    bot: commands.Bot
+    logger: logging.Logger
+    userCache: TableCache
+
+    def __init__(self, bot: commands.Bot, connectionString: str):
         self.bot = bot
         self.daily_stats_update.start()
         self.logger = logging.getLogger('discord.StatsLC')
@@ -29,7 +28,7 @@ class StatsLC(commands.Cog):
     def cog_unload(self):
         self.daily_stats_update.cancel()
 
-    @tasks.loop(time=time)
+    @tasks.loop(time=datetime.time(hour=10, minute=58, tzinfo=datetime.timezone.utc))
     async def daily_stats_update(self):
         self.logger.debug("Preparing to update users' stats.")
         seenUserIds = set()
@@ -60,7 +59,7 @@ class StatsLC(commands.Cog):
 
         self.logger.info("Successfully updated users' stats")
 
-    def log_user_completion(self, message, userId):
+    def log_user_completion(self, message: discord.Message, userId: int):
         self.logger.debug(f'Logging stats for user [{userId}].')
         userEntity = self.load_user_cache(userId)
         if (userEntity.completedToday):
@@ -72,7 +71,7 @@ class StatsLC(commands.Cog):
         self.check_streak(userEntity, message)
         self.save_user_cache(userEntity)
 
-    def increment_queston_difficulty(self, userEntity, dailyLCQuestion):
+    def increment_queston_difficulty(self, userEntity: UserEntity, dailyLCQuestion: discord.Embed):
         difficulty = parse_embed_fields(dailyLCQuestion.fields, 'difficulty')
         if (difficulty.lower() == 'easy'):
             userEntity.numEasy += 1
@@ -81,10 +80,10 @@ class StatsLC(commands.Cog):
         else:
             userEntity.numHard += 1
 
-    def check_streak(self, userEntity, dailyLCMessage):
-        now = datetime.datetime.now(utc)
+    def check_streak(self, userEntity: UserEntity, dailyLCMessage: discord.Message):
+        now = datetime.datetime.now(datetime.timezone.utc)
 
-        nextRelease = datetime.datetime.combine(now.date(), time)
+        nextRelease = datetime.datetime.combine(now.date(), datetime.time(hour=11, minute=00, tzinfo=datetime.timezone.utc))
 
         if now > nextRelease:
             # Before 11 AM UTC, use yesterday as latest release
@@ -101,19 +100,18 @@ class StatsLC(commands.Cog):
                 self.logger.info(f'Starting streak for user [{userEntity.id}].')
                 userEntity.currStreakStartDate = latestRelease.date()
 
-    def get_user_stats(self, user):
+    def get_user_stats(self, user: discord.User) -> discord.Embed:
         self.logger.debug(f'Getting user [{user.id}] stats.')
         userEntity = self.load_user_cache(user.id)
         self.logger.info(f'Successfully generated user [{user.id}] stats.')
         return self.format_user_stats_embed(user.name, userEntity)
 
-    def format_user_stats_embed(self, userName, userEntity):
+    def format_user_stats_embed(self, userName: str, userEntity: UserEntity) -> discord.Embed:
         title = f'{userName}\'s Daily LC stats'
         date = datetime.datetime.now().strftime("%m-%d-%Y")
         description = f'Here are your stats as of {date}.'
-        fields = []
-        embedMessage = discord.Embed(title=title, 
-                                     description=description, 
+        embedMessage = discord.Embed(title=title,
+                                     description=description,
                                      color=discord.Color.blue())
 
         embedMessage.add_field(name="Easy Solved", value=f'{userEntity.numEasy}')
@@ -125,12 +123,12 @@ class StatsLC(commands.Cog):
 
         return embedMessage
 
-    def save_user_cache(self, user):
+    def save_user_cache(self, user: discord.User):
         self.logger.debug(f'Saving user [{user.id}] to userCache.')
         self.userCache.save_entity(user)
         self.logger.info(f'Saved user [{user.id}] to userCache.')
 
-    def load_user_cache(self, userId):
+    def load_user_cache(self, userId: int) -> UserEntity:
         user = self.userCache.load_entity(userId)
         if (user is None):
             self.logger.info(f'Creating user entity for user [{userId}].')

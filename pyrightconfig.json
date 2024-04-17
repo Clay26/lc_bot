@@ -1,0 +1,8 @@
+{
+    "include": [
+        "Entities",
+        "LCBot",
+        "Utils",
+        "lc-bot-server.py"
+    ]
+}
