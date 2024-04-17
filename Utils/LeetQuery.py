@@ -1,18 +1,17 @@
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
+from typing import Optional, Dict, Any
+import logging
 
+class LeetQuery:
+    def __init__(self, url: str = "https://leetcode.com/graphql"):
+        transport = AIOHTTPTransport(url=url)
+        self.client = Client(transport=transport, fetch_schema_from_transport=False)
 
-class LeetQuery():
-    async def daily_question():
-# Select your transport with a defined url endpoint
-        transport = AIOHTTPTransport(url="https://leetcode.com/graphql")
+        self.logger = logging.getLogger('discord.LeetQuery')
 
-# Create a GraphQL client using the defined transport
-        client = Client(transport=transport, fetch_schema_from_transport=False)
-
-# Provide a GraphQL query
-        query = gql(
-            """
+    async def daily_question(self) -> Optional[Dict[str, Any]]:
+        query = gql("""
             query questionOfToday {
               activeDailyCodingChallengeQuestion {
                 date
@@ -38,9 +37,11 @@ class LeetQuery():
                 }
               }
             }
-            """
-        )
+        """)
 
-# Execute the query on the transport
-        result = await client.execute_async(query)
-        return result
+        try:
+            result = await self.client.execute_async(query)
+            return result
+        except Exception as e:
+            self.logger.error(f"Failed to query leetcode.com for daily question: {e}", exc_info=True)
+            return None

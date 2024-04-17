@@ -57,7 +57,7 @@ class DailyLC(commands.Cog):
     async def get_daily_question_message(self):
             self.logger.debug("Querying LeetCode for daily question.")
 
-            question = await LeetQuery.daily_question()
+            question = await LeetQuery().daily_question()
 
             link = question['activeDailyCodingChallengeQuestion']['link']
             fullLink = f'https://leetcode.com{link}'

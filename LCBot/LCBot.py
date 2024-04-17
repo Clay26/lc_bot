@@ -72,6 +72,7 @@ class LCBot():
         logging.getLogger('discord.DailyLC').setLevel(lcLoggingLevel)
         logging.getLogger('discord.StatsLC').setLevel(lcLoggingLevel)
         logging.getLogger('discord.TableCache').setLevel(lcLoggingLevel)
+        logging.getLogger('discord.LeetQuery').setLevel(lcLoggingLevel)
 
     def register_events(self):
         @self.bot.event
