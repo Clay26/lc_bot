@@ -4,9 +4,10 @@ import discord
 from discord.ext import commands
 import logging.handlers
 from LCBot import DailyLC, StatsLC
+from Entities import UserEntity
 
 
-def user_entity_info(userEntity):
+def user_entity_info(userEntity: UserEntity) -> str:
     return (
         f"Loaded user [{userEntity.id}] from cache.\n"
         f"User [{userEntity.id}] stats:\n"
@@ -20,10 +21,14 @@ def user_entity_info(userEntity):
     )
 
 
-class LCBot():
+class LCBot:
+    description: str = 'Sends a daily leet code challenge.'
+    intents: discord.Intents = discord.Intents.default()
+    environment: str
+    bot: commands.Bot
+    logger: logging.Logger
+
     def __init__(self):
-        self.description = '''Sends a daily leet code challenge.'''
-        self.intents = discord.Intents.default()
         self.intents.members = True
         self.intents.message_content = True
         self.intents.reactions = True
@@ -87,7 +92,7 @@ class LCBot():
             print('Added StatsLC bot')
 
         @self.bot.event
-        async def on_raw_reaction_add(payload):
+        async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
             channel = self.bot.get_channel(payload.channel_id)
             message = await channel.fetch_message(payload.message_id)
 
@@ -103,7 +108,7 @@ class LCBot():
 
     def register_commands(self):
         @self.bot.command()
-        async def localTest(ctx):
+        async def localTest(ctx: commands.Context):
             if self.environment == 'development':
                 dailyLC = self.bot.get_cog('DailyLC')
 
@@ -134,18 +139,18 @@ class LCBot():
                 await ctx.send(user_entity_info(testUserEntity))
 
         @self.bot.command()
-        async def test(ctx):
+        async def test(ctx: commands.Context):
             dailyLC = self.bot.get_cog('DailyLC')
             message = await dailyLC.get_daily_question_message()
             await ctx.send(embed=message)
 
         @self.bot.command()
-        async def fullTest(ctx):
+        async def fullTest(ctx: commands.Context):
             dailyLC = self.bot.get_cog('DailyLC')
             await dailyLC.send_daily_question()
 
         @self.bot.command()
-        async def setChannel(ctx, channelId: int):
+        async def setChannel(ctx: commands.Context, channelId: int):
             dailyLC = self.bot.get_cog('DailyLC')
             await dailyLC.set_channel_id(ctx, channelId)
 
@@ -154,11 +159,10 @@ class LCBot():
             name="stats",
             description="List out your personal stats."
         )
-        async def get_user_stats(interaction):
+        async def get_user_stats(interaction: discord.Interaction):
             statsLC = self.bot.get_cog('StatsLC')
             statsEmbed = statsLC.get_user_stats(interaction.user)
             await interaction.response.send_message(embed=statsEmbed)
-
 
     def run(self):
         DISCORD_API_KEY = os.getenv('DISCORD_BOT_API_KEY')
