@@ -5,11 +5,6 @@ from discord.ext import commands, tasks
 from Utils import TableCache
 from Entities import UserEntity
 
-utc = datetime.timezone.utc
-
-# If no tzinfo is given then UTC is assumed.
-time = datetime.time(hour=10, minute=58, tzinfo=utc)
-
 
 def parse_embed_fields(dailyLCFields, fieldName):
     for field in dailyLCFields:
@@ -29,7 +24,7 @@ class StatsLC(commands.Cog):
     def cog_unload(self):
         self.daily_stats_update.cancel()
 
-    @tasks.loop(time=time)
+    @tasks.loop(time=datetime.time(hour=10, minute=58, tzinfo=datetime.timezone.utc))
     async def daily_stats_update(self):
         self.logger.debug("Preparing to update users' stats.")
         seenUserIds = set()
