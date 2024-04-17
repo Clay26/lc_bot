@@ -42,14 +42,14 @@ class StatsLC(commands.Cog):
 
             currStreak = userEntity.get_current_streak()
 
-            if userEntity.completedToday:
-                # Check if today's completion results in a new longest streak
-                if currStreak > userEntity.longestStreak:
-                    self.logger.info(f'User [{userEntity.id}] has a new longest streak!')
-                    userEntity.longestStreak = currStreak
-            else:
+            if not userEntity.completedToday:
                 # Reset current streak if they haven't completed today
                 userEntity.currStreakStartDate = None
+            else:
+                if (userEntity.get_current_streak() > userEntity.longestStreak):
+                    # Check if today's completion results in a new longest streak
+                    userEntity.longestStreak = userEntity.get_current_streak()
+                    self.logger.info(f'User [{userEntity.id}] has a new longest streak!')
 
             # Reset the daily completion flag for all users
             userEntity.completedToday = False
@@ -99,6 +99,11 @@ class StatsLC(commands.Cog):
             if (userEntity.currStreakStartDate is None):
                 self.logger.info(f'Starting streak for user [{userEntity.id}].')
                 userEntity.currStreakStartDate = latestRelease.date()
+
+            if (userEntity.get_current_streak() > userEntity.longestStreak):
+                # Check if today's completion results in a new longest streak
+                userEntity.longestStreak = userEntity.get_current_streak()
+                self.logger.info(f'User [{userEntity.id}] has a new longest streak!')
 
     def get_user_stats(self, user: discord.User) -> discord.Embed:
         self.logger.debug(f'Getting user [{user.id}] stats.')
