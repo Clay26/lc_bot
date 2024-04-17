@@ -7,7 +7,7 @@ class ServerEntity(BaseEntity):
     PARTITION_KEY: ClassVar[str] = "ChannelCache"
     channelId: int
 
-    def __init__(self, guildId: str, channelId: int = 0):
+    def __init__(self, guildId: int, channelId: int = 0):
         super().__init__(self.PARTITION_KEY, str(guildId))
         self.channelId = channelId
 
