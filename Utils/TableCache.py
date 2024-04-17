@@ -35,7 +35,7 @@ class TableCache():
     def load_entity(self, rowKey):
         try:
             self.logger.debug(f'Trying to pull from [{self.tableName}] cache.')
-            data = self.tableClient.get_entity(partition_key=self.tableName, row_key=self.entityType.format_row_key(rowKey))
+            data = self.tableClient.get_entity(partition_key=self.tableName, row_key=str(rowKey))
             self.logger.info(f'Found row [{rowKey}] in [{self.tableName}] cache!')
             return self.entityType.from_entity(data)
         except ResourceNotFoundError:

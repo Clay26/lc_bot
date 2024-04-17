@@ -1,9 +1,21 @@
 import datetime
+from azure.data.tables import TableEntity
+from typing import ClassVar, Type, Optional
 from .BaseEntity import BaseEntity
 
+
 class UserEntity(BaseEntity):
-    def __init__(self, userId):
-        super().__init__("UserCache", userId)
+    PARTITION_KEY: ClassVar[str] = "UserCache"
+    userId: int
+    numEasy: int
+    numMedium: int
+    numHard: int
+    longestStreak: int
+    currStreakStartDate: Optional[datetime.datetime] = None
+    completedToday: bool
+
+    def __init__(self, userId: str):
+        super().__init__(self.PARTITION_KEY, str(userId))
         self.id = userId
         self.numEasy = 0
         self.numMedium = 0
@@ -12,7 +24,7 @@ class UserEntity(BaseEntity):
         self.currStreakStartDate = None
         self.completedToday = False
 
-    def to_entity(self):
+    def to_entity(self) -> dict:
         currStreakStartDataStr = (self.currStreakStartDate.isoformat() if self.currStreakStartDate else "None")
 
         return {
@@ -27,7 +39,7 @@ class UserEntity(BaseEntity):
         }
 
     @classmethod
-    def from_entity(cls, entity):
+    def from_entity(cls: Type['UserEntity'], entity: TableEntity) -> 'UserEntity':
         user_id = entity['RowKey']
         obj = cls(user_id)
         obj.numEasy = int(entity.get('numEasy', 0))
@@ -45,14 +57,10 @@ class UserEntity(BaseEntity):
         return obj
 
     @classmethod
-    def get_partition_key(cls):
-        return "UserCache"
+    def get_partition_key(cls) -> str:
+        return cls.PARTITION_KEY
 
-    @classmethod
-    def format_row_key(cls, rowKey):
-        return str(rowKey)
-
-    def get_current_streak(self):
+    def get_current_streak(self) -> int:
         if (self.currStreakStartDate is None):
             return 0
 

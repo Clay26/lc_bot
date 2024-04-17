@@ -1,22 +1,26 @@
+from azure.data.tables import TableEntity
 from abc import ABC, abstractmethod
+from typing import Type
+
 
 class BaseEntity(ABC):
-    def __init__(self, partitionKey, rowKey):
+    PartitionKey: str
+    RowKey: str
+
+    def __init__(self, partitionKey: str, rowKey: str):
         self.PartitionKey = partitionKey
         self.RowKey = rowKey
 
     @abstractmethod
-    def to_entity(self):
-        pass
-
-    @abstractmethod
-    def from_entity(cls, entity):
-        pass
-
-    @abstractmethod
-    def get_partition_key(cls, entity):
+    def to_entity(self) -> dict:
         pass
 
     @classmethod
-    def format_row_key(cls, rowKey):
-        return rowKey
+    @abstractmethod
+    def from_entity(cls: Type['BaseEntity'], entity: TableEntity) -> 'BaseEntity':
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_partition_key(cls) -> str:
+        pass
