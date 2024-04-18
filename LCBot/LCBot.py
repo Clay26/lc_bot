@@ -138,6 +138,9 @@ class LCBot:
                 testUserEntity = statsLC.load_user_cache(testUserEntity.id)
                 await ctx.send(user_entity_info(testUserEntity))
 
+                statsEmbed = statsLC.get_user_stats(testUser)
+                await ctx.send(embed=statsEmbed)
+
         @self.bot.command()
         async def test(ctx: commands.Context):
             dailyLC = self.bot.get_cog('DailyLC')
