@@ -45,7 +45,7 @@ class DailyLC(commands.Cog):
                     channel = self.bot.get_channel(int(channelId))
                     if (channel is not None):
                         await channel.send(embed=message)
-                        self.logger.info(f'Successfully sent daily question with link [{link}] to server [{guild.id}].')
+                        self.logger.info(f'Successfully sent daily question to server [{guild.id}].')
                     else:
                         self.logger.info(f'Failed to get channel object for server [{guild.id}].')
                 else:
