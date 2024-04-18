@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Type, TypeVar, Generic, Optional, Dict, Any
 from azure.data.tables import TableServiceClient, UpdateMode, TableClient
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
@@ -8,6 +9,9 @@ E = TypeVar('E', bound='BaseEntity')
 
 
 class TableCache(Generic[E]):
+    # Cache TTL in seconds
+    CACHE_TTL = 3600
+
     tableName: str
     tableServiceClient: Optional[TableServiceClient]
     tableClient: Optional[TableClient]
@@ -74,9 +78,19 @@ class TableCache(Generic[E]):
 
     def save_to_local_cache(self, obj: E):
         self.logger.debug('Saving to local cache.')
-        self.localCache[str(obj.RowKey)] = obj
+        expirationTime = time.time() + self.CACHE_TTL
+        self.localCache[str(obj.RowKey)] = {"data": obj, "expiry": expirationTime}
 
     def load_from_local_cache(self, rowKey: str) -> Optional[E]:
         self.logger.debug('Loading from local cache.')
         localEntity = self.localCache.get(rowKey, None)
-        return localEntity
+
+        if localEntity is None:
+            return None
+
+        if localEntity["expiry"] < time.time():
+            self.logger.debug(f'Entry [{rowKey}] is expired in the local cache.')
+            del self.localCache[rowKey]
+            return None
+
+        return localEntity["data"]
