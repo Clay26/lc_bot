@@ -52,13 +52,14 @@ class TableCache(Generic[E]):
         except Exception as e:
             self.logger.error(f"Error saving to table [{self.tableName}]: {e}")
 
-    def load_entity(self, rowKey: any) -> Optional[E]:
-        localEntity = self.load_from_local_cache(str(rowKey))
-        if localEntity is not None:
-            self.logger.info(f'Found row [{rowKey}] in local [{self.tableName}] cache!')
-            return localEntity
-        else:
-            self.logger.info(f'Row [{rowKey}] not found in local [{self.tableName}] cache!')
+    def load_entity(self, rowKey: any, bypassCache = False) -> Optional[E]:
+        if not(bypassCache):
+            localEntity = self.load_from_local_cache(str(rowKey))
+            if localEntity is not None:
+                self.logger.info(f'Found row [{rowKey}] in local [{self.tableName}] cache!')
+                return localEntity
+            else:
+                self.logger.info(f'Row [{rowKey}] not found in local [{self.tableName}] cache!')
 
         try:
             self.logger.debug(f'Trying to pull from [{self.tableName}] cache.')
