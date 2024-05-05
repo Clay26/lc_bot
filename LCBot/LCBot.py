@@ -92,6 +92,10 @@ class LCBot:
             print('Added StatsLC bot')
 
         @self.bot.event
+        async def on_disconnect():
+            self.logger.warning("Bot disconnected!")
+
+        @self.bot.event
         async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
             channel = self.bot.get_channel(payload.channel_id)
             message = await channel.fetch_message(payload.message_id)
@@ -173,6 +177,9 @@ class LCBot:
         if not DISCORD_API_KEY:
             self.logger.error("Unable to fetch API key.")
         else:
-            self.logger.debug("Logging in as grinder bot.")
-            self.bot.run(DISCORD_API_KEY, log_handler=None)
-            self.logger.info("Successfully logged in as the grinder bot.")
+            try:
+                self.logger.debug("Logging in as grinder bot.")
+                self.bot.run(DISCORD_API_KEY, log_handler=None)
+                self.logger.info("Successfully logged in as the grinder bot.")
+            except Exception as e:
+                self.logger.error(f"Bot crashed due to exception: {e}", exc_info=True)
