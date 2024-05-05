@@ -13,7 +13,6 @@ Follow these steps to set up your local development environment:
 1. Clone the repository to your local machine.
 2. Create a `.env` file in the root directory with the following content:
 ```
-plaintext
 DISCORD_BOT_API_KEY='<your_discord_bot_api_key>'
 STORAGE_CONNECTION_STRING='<your_azure_storage_connection_string>'
 TEST_USER='<test_user_id>'
