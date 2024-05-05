@@ -17,7 +17,7 @@ DISCORD_BOT_API_KEY='<your_discord_bot_api_key>'
 STORAGE_CONNECTION_STRING='<your_azure_storage_connection_string>'
 TEST_USER='<test_user_id>'
 ```
-- **Discord Bot API Key:** Obtain from the Discord Developer Portal.
+- **Discord Bot API Key:** Obtain from the [Discord Developer Portal](https://discord.com/developers/docs/intro).
 - **Storage Connection String:** Use an Azure Storage account connection string.
 - **Test User:** A user ID for testing with the ?localTest command.
 3. Set up a Python virtual environment:
