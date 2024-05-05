@@ -23,33 +23,27 @@ TEST_USER='<test_user_id>'
 - **Test User:** A user ID for testing with the ?localTest command.
 3. Set up a Python virtual environment:
 ```
-bash
 python -m venv venv
 ```
 4. Activate the virtual environment:
 - **Windows:**
 ```
-powershell
 . .\venv\Scripts\activate.ps1
 ```
 - **macOS/Linux:**
 ```
-bash
 source venv/bin/activate
 ```
 5. Install dependencies:
 ```
-bash
 pip install -r requirements.txt
 ```
 - To update dependencies, use:
 ```
-bash
 pip freeze > requirements.txt
 ```
 6. Run the bot locally:
 ```
-bash
 python lc-bot-server.py
 ```
 
