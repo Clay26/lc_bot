@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Generate and Commit Version
       - uses: actions/checkout@v4
-        run: |
+      - run: |
           echo "$(date +'%Y.%m.%d-%H%M')" > VERSION
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
