@@ -31,8 +31,18 @@ class DailyLC(commands.Cog):
     @tasks.loop(time=datetime.time(hour=11, minute=00, tzinfo=datetime.timezone.utc))
     async def daily_question_loop(self):
         self.logger.debug("Preparing to send daily question.")
-        await self.send_daily_question()
-        self.logger.info("Successfully sent daily LC message.")
+        try:
+            await self.send_daily_question()
+            self.logger.info("Successfully sent daily LC message.")
+        except Exception as e:
+            self.logger.error(f"Error in daily_question_loop: {e}", exc_info=True)
+
+    @daily_question_loop.error
+    async def daily_question_loop_error(self, error):
+        self.logger.error(f"Unhandled error in daily_question_loop: {error}", exc_info=True)
+        if not self.daily_question_loop.is_running():
+            self.logger.info("Restarting daily_question_loop.")
+            self.daily_question_loop.restart()
 
     async def send_daily_question(self):
         message = await self.get_daily_question_message()

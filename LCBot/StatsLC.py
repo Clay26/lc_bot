@@ -31,33 +31,32 @@ class StatsLC(commands.Cog):
     @tasks.loop(time=datetime.time(hour=10, minute=58, tzinfo=datetime.timezone.utc))
     async def daily_stats_update(self):
         self.logger.debug("Preparing to update users' stats.")
-        seenUserIds = set()
+        try:
+            seenUserIds = set()
+            for user in self.bot.get_all_members():
+                if user.id in seenUserIds:
+                    continue
+                seenUserIds.add(user.id)
+                userEntity = self.load_user_cache(user.id)
+                if not userEntity.completedToday:
+                    userEntity.currStreakStartDate = None
+                else:
+                    if userEntity.get_current_streak() > userEntity.longestStreak:
+                        userEntity.longestStreak = userEntity.get_current_streak()
+                        self.logger.info(f'User [{userEntity.id}] has a new longest streak!')
+                # Reset the daily completion flag for all users
+                userEntity.completedToday = False
+                self.save_user_cache(userEntity)
+            self.logger.info("Successfully updated users' stats")
+        except Exception as e:
+            self.logger.error(f"Error in daily_stats_update: {e}", exc_info=True)
 
-        for user in self.bot.get_all_members():
-            if user.id in seenUserIds:
-                continue
-            seenUserIds.add(user.id)
-
-            userEntity = self.load_user_cache(user.id)
-
-            currStreak = userEntity.get_current_streak()
-
-            if not userEntity.completedToday:
-                # Reset current streak if they haven't completed today
-                userEntity.currStreakStartDate = None
-            else:
-                if (userEntity.get_current_streak() > userEntity.longestStreak):
-                    # Check if today's completion results in a new longest streak
-                    userEntity.longestStreak = userEntity.get_current_streak()
-                    self.logger.info(f'User [{userEntity.id}] has a new longest streak!')
-
-            # Reset the daily completion flag for all users
-            userEntity.completedToday = False
-
-            # Save changes to the cache
-            self.save_user_cache(userEntity)
-
-        self.logger.info("Successfully updated users' stats")
+    @daily_stats_update.error
+    async def daily_stats_update_error(self, error):
+        self.logger.error(f"Unhandled error in daily_stats_update: {error}", exc_info=True)
+        if not self.daily_stats_update.is_running():
+            self.logger.info("Restarting daily_stats_update.")
+            self.daily_stats_update.restart()
 
     def log_user_completion(self, message: discord.Message, userId: int):
         self.logger.debug(f'Logging stats for user [{userId}].')
