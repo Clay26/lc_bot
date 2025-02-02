@@ -10,8 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Commit and Push Version Update
+      - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Generate and Commit Version
         run: |
           echo "$(date +'%Y.%m.%d-%H%M')" > VERSION
           git config --global user.name "github-actions[bot]"
