@@ -14,14 +14,14 @@ jobs:
 
     steps:
       - name: Checkout Repo
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Generate Version File
-      - run: |
+        run: |
           echo "$(date +'%Y.%m.%d-%H%M')" > VERSION
 
       - name: Push Version to repo
-      - run: |
+        run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
