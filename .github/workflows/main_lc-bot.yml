@@ -5,9 +5,10 @@
 name: Build and deploy Python app to Azure Web App - lc-bot
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Update Version"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:

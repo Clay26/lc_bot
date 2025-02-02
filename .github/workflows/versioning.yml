@@ -1,0 +1,25 @@
+name: Update Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Generate Version String
+        run: echo "$(date +'%Y.%m.%d-%H%M')" > VERSION
+
+      - name: Commit and Push Version Update
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "Update version to $(cat VERSION)"
+          git push
