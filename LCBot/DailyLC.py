@@ -75,7 +75,6 @@ class DailyLC(commands.Cog):
         difficulty = question['activeDailyCodingChallengeQuestion']['question']['difficulty']
         acRate = question['activeDailyCodingChallengeQuestion']['question']['acRate']
         problem = question['activeDailyCodingChallengeQuestion']['question']['title']
-        isPaidOnly = question['activeDailyCodingChallengeQuestion']['question']['paidOnly']
 
         title = "Daily LC"
         date = datetime.datetime.now().strftime("%m-%d-%Y")
@@ -88,7 +87,6 @@ class DailyLC(commands.Cog):
         embedMessage.add_field(name="Problem", value=f'{problem}')
         embedMessage.add_field(name="Acceptance Rate", value=f'{acRate:.2f}%')
         embedMessage.add_field(name="Difficulty", value=f'{difficulty}')
-        embedMessage.add_field(name="Is Paid Only", value=f'{isPaidOnly}')
 
         return embedMessage
 
